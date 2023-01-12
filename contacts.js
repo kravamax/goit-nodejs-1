@@ -4,86 +4,74 @@ const contactsPath = `${path.dirname('./db/contacts.json')}/${path.basename(
   './db/contacts.json'
 )}`;
 
+const updateContacts = async (contacts) =>
+  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
+
+const readContacts = async () => {
+  const response = await fs.readFile(contactsPath);
+  return JSON.parse(response);
+};
+
 async function listContacts() {
-  try {
-    const response = await fs.readFile(contactsPath);
-    const contacts = await JSON.parse(response);
-    const tabularData = await contacts.map((contact) => ({
-      Id: Number(contact.id),
-      Name: contact.name,
-      Email: contact.email,
-      Phone: contact.phone,
-    }));
-    return console.table(tabularData);
-  } catch (error) {
-    return console.log(error.message);
-  }
+  const contacts = await readContacts();
+  const tabularData = contacts.map((contact) => ({
+    Id: Number(contact.id),
+    Name: contact.name,
+    Email: contact.email,
+    Phone: contact.phone,
+  }));
+  console.table(tabularData);
 }
 
 async function getContactById(contactId) {
-  try {
-    const response = await fs.readFile(contactsPath);
-    const contacts = JSON.parse(response);
-    const tabularData = contacts.filter(
-      (contact) =>
-        contact.id === contactId && {
-          Id: contact.id,
-          Name: contact.name,
-          Email: contact.email,
-          Phone: contact.phone,
-        }
-    );
+  const contacts = await readContacts();
+  const tabularData = contacts.filter(
+    (contact) =>
+      contact.id === contactId && {
+        Id: contact.id,
+        Name: contact.name,
+        Email: contact.email,
+        Phone: contact.phone,
+      }
+  );
 
-    tabularData.length
-      ? console.table(tabularData)
-      : console.log(`ID ${contactId} is not defined`);
-  } catch (error) {
-    return console.log(err.message);
-  }
+  tabularData.length
+    ? console.table(tabularData)
+    : console.log(`ID ${contactId} is not defined`);
 }
 
 async function removeContact(contactId) {
-  try {
-    const response = await fs.readFile(contactsPath);
-    const contacts = await JSON.parse(response);
-    const newContacts = await contacts.filter(
-      (contact) =>
-        contact.id !== contactId && {
-          Id: Number(contact.id),
-          Name: contact.name,
-          Email: contact.email,
-          Phone: contact.phone,
-        }
-    );
+  const contacts = await readContacts();
+  const newContacts = contacts.filter(
+    (contact) =>
+      contact.id !== contactId && {
+        Id: Number(contact.id),
+        Name: contact.name,
+        Email: contact.email,
+        Phone: contact.phone,
+      }
+  );
 
-    if (newContacts.length === contacts.length) {
-      console.log(`Impossible delete, ID ${contactId} not found.`);
-    } else {
-      console.log(`Contact ${contactId} was delete`);
-      return fs.writeFile(contactsPath, JSON.stringify(newContacts));
-    }
-  } catch (error) {
-    return console.log(error.message);
+  if (newContacts.length === contacts.length) {
+    console.log(`Impossible delete, ID ${contactId} not found.`);
+  } else {
+    await updateContacts(newContacts);
+    console.log(`Contact ${contactId} was delete`);
   }
 }
 
 async function addContact(name, email, phone) {
-  try {
-    const response = await fs.readFile(contactsPath);
-    const contacts = await JSON.parse(response);
+  const contacts = await readContacts();
 
-    contacts.push({
-      name,
-      email,
-      phone,
-      id: (Math.random() * (1000 - 100) + 100).toFixed(),
-    });
+  contacts.push({
+    name,
+    email,
+    phone,
+    id: (Math.random() * (1000 - 100) + 100).toFixed(),
+  });
 
-    fs.writeFile(contactsPath, JSON.stringify(contacts));
-    console.log('Contact was add');
-  } catch (error) {
-    return console.log(error.message);
-  }
+  updateContacts(contacts);
+  console.log('Contact was add');
 }
 
 module.exports = {
