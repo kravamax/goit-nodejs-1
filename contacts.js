@@ -42,22 +42,16 @@ async function getContactById(contactId) {
 
 async function removeContact(contactId) {
   const contacts = await readContacts();
-  const newContacts = contacts.filter(
-    (contact) =>
-      contact.id !== contactId && {
-        Id: Number(contact.id),
-        Name: contact.name,
-        Email: contact.email,
-        Phone: contact.phone,
-      }
-  );
+  const index = contacts.findIndex((contact) => contact.id !== contactId);
 
-  if (newContacts.length === contacts.length) {
+  if (index === -1) {
     console.log(`Impossible delete, ID ${contactId} not found.`);
-  } else {
-    await updateContacts(newContacts);
-    console.log(`Contact ${contactId} was delete`);
+    return null;
   }
+  const [result] = contacts.splice(index, 1);
+  await updateContacts(contacts);
+  console.log(`Contact ${contactId} was delete`);
+  return result;
 }
 
 async function addContact(name, email, phone) {
